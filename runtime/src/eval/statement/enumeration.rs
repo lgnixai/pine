@@ -1,6 +1,5 @@
-use tsr_lexer::globals::Positioned;
-use tsr_parser::ast::EnumDeclaration;
-
+use tsr_parser::input::Positioned;
+use tsr_parser::lexer::ast::EnumDeclaration;
 use crate::{
     value::{Enum, EnumMember, Value},
     Runtime,
@@ -20,21 +19,21 @@ impl Runtime {
                 }
 
                 members.push(EnumMember {
-                    name: member.value.name.value.0,
+                    name: member.value.name.value.name,
                     init: Box::new(init),
                 });
             } else {
                 members.push(EnumMember {
-                    name: member.value.name.value.0,
+                    name: member.value.name.value.name,
                     init: Box::new(Value::Number(index as i64)),
                 });
             }
         }
         let value = Value::Enum(Enum {
-            name: enumeration.name.value.0.clone(),
+            name: enumeration.name.value.name.clone(),
             members,
         });
 
-        self.set_variable(enumeration.name.value.0, span.wrap(value))
+        self.set_variable(enumeration.name.value.name, span.wrap(value))
     }
 }

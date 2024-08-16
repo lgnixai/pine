@@ -1,17 +1,13 @@
-pub mod class;
+
 pub mod enumeration;
-pub mod export;
+
 pub mod expression;
 pub mod function;
-pub mod if_else;
-pub mod import;
-pub mod interface;
-pub mod returning;
-pub mod type_alias;
+
 pub mod variable;
 
 use super::{
-    parse_ident, parse_literal,
+
     signatures::{
         parse_call_signature, parse_construct_signature, parse_index_signature,
         parse_method_signature, parse_property_signature,
@@ -20,9 +16,8 @@ use super::{
 };
 
 use crate::{
-    ast::{ArrowParameter, Literal, Parameter, PropertyName, Statement, TypeMember, TypeParameter},
-    tags::{
-        bracket_close_tag, bracket_open_tag, colon_tag, eq_tag, extends_tag, positioned,
+     tags::{
+        bracket_close_tag, bracket_open_tag, colon_tag, eq_tag, extends_tag,
         private_tag, protected_tag, public_tag, question_tag, semi_tag,
     },
 };
@@ -33,20 +28,26 @@ use nom::{
     sequence::{delimited, preceded, terminated, tuple},
 };
 
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    token::Modifier,
-    tokens::Tokens,
-};
 
-pub fn parse_property_name(input: Tokens) -> TokenResult<Positioned<PropertyName>> {
+use crate::input::{Input, PineResult, Positioned, positioned, Span};
+use crate::lexer::ast::{ArrowParameter, Literal, Parameter, PropertyName, Statement, TypeMember, TypeParameter};
+use crate::lexer::identifier::Identifier;
+
+use crate::lexer::token::{ Modifier};
+use crate::parsing::parse_identifier::parse_identifier;
+use crate::parsing::parse_literal::parse_literal;
+
+pub fn parse_property_name(input: Input) -> PineResult<Positioned<PropertyName>> {
     positioned(alt((
-        map(parse_ident, |ident| {
+        map(parse_identifier, |ident| {
             PropertyName::LiteralPropertyName(
                 ident
                     .span
-                    .wrap(Literal::String(ident.span.wrap(ident.value.0))),
+                    .wrap(Literal::String(ident.span.wrap(ident.value.name))),
+
             )
+
+                //Positioned::new(ident.value.name, Span::from(input)))
         }),
         map(parse_literal, PropertyName::LiteralPropertyName),
         map(
@@ -60,7 +61,7 @@ pub fn parse_property_name(input: Tokens) -> TokenResult<Positioned<PropertyName
     )))(input)
 }
 
-pub fn parse_type_member(input: Tokens) -> TokenResult<Positioned<TypeMember>> {
+pub fn parse_type_member(input: Input) -> PineResult<Positioned<TypeMember>> {
     positioned(alt((
         map(parse_property_signature, TypeMember::PropertySignature),
         map(parse_call_signature, TypeMember::CallSignature),
@@ -70,10 +71,10 @@ pub fn parse_type_member(input: Tokens) -> TokenResult<Positioned<TypeMember>> {
     )))(input)
 }
 
-pub fn parse_type_parameter(input: Tokens) -> TokenResult<Positioned<TypeParameter>> {
+pub fn parse_type_parameter(input: Input) -> PineResult<Positioned<TypeParameter>> {
     positioned(map(
         tuple((
-            parse_ident,
+            parse_identifier,
             opt(preceded(extends_tag, parse_type)),
             opt(preceded(eq_tag, parse_type)),
         )),
@@ -85,10 +86,10 @@ pub fn parse_type_parameter(input: Tokens) -> TokenResult<Positioned<TypeParamet
     ))(input)
 }
 
-pub fn parse_arrow_parameter(input: Tokens) -> TokenResult<Positioned<ArrowParameter>> {
+pub fn parse_arrow_parameter(input: Input) -> PineResult<Positioned<ArrowParameter>> {
     positioned(map(
         tuple((
-            parse_ident,
+            parse_identifier,
             positioned(opt(question_tag)),
             opt(preceded(colon_tag, parse_type)),
             opt(preceded(eq_tag, expression::parse_expression)),
@@ -102,10 +103,10 @@ pub fn parse_arrow_parameter(input: Tokens) -> TokenResult<Positioned<ArrowParam
     ))(input)
 }
 
-pub fn parse_parameter(input: Tokens) -> TokenResult<Positioned<Parameter>> {
+pub fn parse_parameter(input: Input) -> PineResult<Positioned<Parameter>> {
     positioned(map(
         tuple((
-            parse_ident,
+            parse_identifier,
             positioned(opt(question_tag)),
             preceded(colon_tag, parse_type),
             opt(preceded(eq_tag, expression::parse_expression)),
@@ -119,7 +120,7 @@ pub fn parse_parameter(input: Tokens) -> TokenResult<Positioned<Parameter>> {
     ))(input)
 }
 
-pub fn parse_access_modifier(input: Tokens) -> TokenResult<Positioned<Modifier>> {
+pub fn parse_access_modifier(input: Input) -> PineResult<Positioned<Modifier>> {
     positioned(alt((
         value(Modifier::Public, public_tag),
         value(Modifier::Private, private_tag),
@@ -127,17 +128,17 @@ pub fn parse_access_modifier(input: Tokens) -> TokenResult<Positioned<Modifier>>
     )))(input)
 }
 
-pub fn parse_statement(input: Tokens) -> TokenResult<Positioned<Statement>> {
+pub fn parse_statement(input: Input) -> PineResult<Positioned<Statement>> {
     positioned(alt((
-        map(
-            type_alias::parse_type_alias_declaration,
-            Statement::TypeAliasDeclaration,
-        ),
-        map(class::parse_class_declaration, Statement::ClassDeclaration),
-        map(
-            interface::parse_interface_declaration,
-            Statement::InterfaceDeclaration,
-        ),
+        // map(
+        //     type_alias::parse_type_alias_declaration,
+        //     Statement::TypeAliasDeclaration,
+        // ),
+        // // map(class::parse_class_declaration, Statement::ClassDeclaration),
+        // map(
+        //     interface::parse_interface_declaration,
+        //     Statement::InterfaceDeclaration,
+        // ),
         map(
             function::parse_function_declaration,
             Statement::FunctionDeclaration,
@@ -150,51 +151,59 @@ pub fn parse_statement(input: Tokens) -> TokenResult<Positioned<Statement>> {
             variable::parse_variable_statement,
             Statement::VariableStatement,
         ),
-        map(if_else::parse_if_statement, |statement| {
-            Statement::IfStatement(Box::new(statement))
-        }),
-        returning::parse_return_statement,
+        // map(if_else::parse_if_statement, |statement| {
+        //     Statement::IfStatement(Box::new(statement))
+        // }),
+        // returning::parse_return_statement,
         map(expression::parse_expression, Statement::Expression),
     )))(input)
 }
 
-pub fn parse_program_statement(input: Tokens) -> TokenResult<Positioned<Statement>> {
+pub fn parse_program_statement(input: Input) -> PineResult<Positioned<Statement>> {
     terminated(
         positioned(alt((
-            map(import::parse_import_declaration, |declaration| {
-                Statement::ImportDeclaration(Box::new(declaration))
-            }),
+
             map(
-                export::parse_export_declaration,
-                Statement::ExportDeclaration,
-            ),
-            map(
-                type_alias::parse_type_alias_declaration,
-                Statement::TypeAliasDeclaration,
-            ),
-            map(class::parse_class_declaration, Statement::ClassDeclaration),
-            map(
-                interface::parse_interface_declaration,
-                Statement::InterfaceDeclaration,
-            ),
-            map(
-                function::parse_function_declaration,
-                Statement::FunctionDeclaration,
+                variable::parse_variable_statement,
+                Statement::VariableStatement,
             ),
             map(
                 enumeration::parse_enum_declaration,
                 Statement::EnumDeclaration,
             ),
-            map(
-                variable::parse_variable_statement,
-                Statement::VariableStatement,
-            ),
-            map(if_else::parse_if_statement, |statement| {
-                Statement::IfStatement(Box::new(statement))
-            }),
-            returning::parse_return_statement,
+            // map(import::parse_import_declaration, |declaration| {
+            //     Statement::ImportDeclaration(Box::new(declaration))
+            // }),
+            // map(
+            //     export::parse_export_declaration,
+            //     Statement::ExportDeclaration,
+            // ),
+            // map(
+            //     type_alias::parse_type_alias_declaration,
+            //     Statement::TypeAliasDeclaration,
+            // ),
+            // map(class::parse_class_declaration, Statement::ClassDeclaration),
+            // map(
+            //     interface::parse_interface_declaration,
+            //     Statement::InterfaceDeclaration,
+            // ),
+            // map(
+            //     function::parse_function_declaration,
+            //     Statement::FunctionDeclaration,
+            // ),
+            // map(
+            //     enumeration::parse_enum_declaration,
+            //     Statement::EnumDeclaration,
+            // ),
+            //
+            // map(if_else::parse_if_statement, |statement| {
+            //     Statement::IfStatement(Box::new(statement))
+            // }),
+            // returning::parse_return_statement,
             map(expression::parse_expression, Statement::Expression),
         ))),
         opt(semi_tag),
     )(input)
 }
+
+

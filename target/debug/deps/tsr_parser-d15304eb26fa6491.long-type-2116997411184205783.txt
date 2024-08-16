@@ -1,0 +1,1 @@
+impl FnMut(LocatedSpan<&str, ParserContext>) -> Result<(LocatedSpan<&str, ParserContext>, TypeParameter), nom::Err<VerboseError<LocatedSpan<&str, ParserContext>>>>

@@ -1,8 +1,7 @@
 use super::parse_expression;
 use crate::{
-    ast::{Expression, FunctionCallExpression},
-    parsing::parse_code_block,
-    tags::{comma_tag, paren_close_tag, paren_open_tag, positioned},
+
+    tags::{comma_tag, paren_close_tag, paren_open_tag},
 };
 
 use nom::{
@@ -10,16 +9,15 @@ use nom::{
     multi::separated_list0,
     sequence::{delimited, pair},
 };
+use crate::input::{Input, PineResult, Positioned,positioned};
+use crate::lexer::ast::{Expression, FunctionCallExpression};
+use crate::parsing::parse_code_block::parse_code_block;
 
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    tokens::Tokens,
-};
 
 pub fn parse_call_expression(
-    input: Tokens,
+    input: Input,
     fn_handle: Positioned<Expression>,
-) -> TokenResult<Positioned<Expression>> {
+) -> PineResult<Positioned<Expression>> {
     map(
         positioned(pair(
             delimited(

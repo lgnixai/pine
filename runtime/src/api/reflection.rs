@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use tsr_parser::ast::ArraySize;
-use tsr_parser::ast::PredefinedType;
-use tsr_parser::ast::PrimaryType;
+use tsr_parser::lexer::ast::{ArraySize,PredefinedType,PrimaryType};
+
 
 use crate::value::native::Module;
 use crate::value::native::NativeModule;
@@ -45,7 +44,7 @@ impl Reflection {
                             })
                             .collect::<Vec<_>>(),
                     )
-                    .prop("returnType", ty.to_string())
+                    //.prop("returnType", ty.to_string())
                     .build()
             },
         )

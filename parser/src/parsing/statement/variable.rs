@@ -1,7 +1,7 @@
-use super::{expression::parse_expression, parse_ident, parse_type};
+use super::{expression::parse_expression};
 use crate::{
-    ast::{VariableDeclaration, VariableStatement},
-    tags::{colon_tag, comma_tag, const_tag, eq_tag, let_tag, positioned, question_tag, semi_tag},
+    lexer::ast::{VariableDeclaration, VariableStatement},
+    tags::{colon_tag, comma_tag, const_tag, eq_tag, let_tag, question_tag, semi_tag},
 };
 
 use nom::{
@@ -11,13 +11,14 @@ use nom::{
     sequence::{preceded, terminated, tuple},
 };
 
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    token::{ReservedWord, Token},
-    tokens::Tokens,
-};
 
-pub fn parse_variable_statement(input: Tokens) -> TokenResult<Positioned<VariableStatement>> {
+use crate::input::{Input, PineResult, Positioned,positioned};
+use crate::lexer::token::Token;
+use crate::lexer::token::Token::ReservedWord;
+use crate::parsing::parse_identifier::parse_identifier;
+use crate::parsing::types::parse_type;
+
+pub fn parse_variable_statement(input: Input) -> PineResult<Positioned<VariableStatement>> {
     positioned(map(
         tuple((
             alt((let_tag, const_tag)),
@@ -26,7 +27,7 @@ pub fn parse_variable_statement(input: Tokens) -> TokenResult<Positioned<Variabl
                     comma_tag,
                     positioned(map(
                         tuple((
-                            parse_ident,
+                            parse_identifier,
                             positioned(opt(question_tag)),
                             opt(preceded(colon_tag, parse_type)),
                             opt(preceded(eq_tag, parse_expression)),
@@ -43,7 +44,7 @@ pub fn parse_variable_statement(input: Tokens) -> TokenResult<Positioned<Variabl
             ),
         )),
         |(kind, declarations)| VariableStatement {
-            mutable: kind.wrap(kind.value.tok[0].value == Token::ReservedWord(ReservedWord::Let)),
+            mutable: kind.wrap(kind.value.fragment() == &"let"),
             declarations,
         },
     ))(input)

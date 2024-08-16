@@ -9,6 +9,5 @@ edition = "2021"
 derivative = "2.2.0"
 owo-colors = "4.0.0"
 safer_owning_ref = "0.5.0"
-tsr-lexer = { version = "0.0.0", path = "../lexer" }
 tsr-macro = { version = "0.1.0", path = "../macro" }
 tsr-parser = { version = "0.0.0", path = "../parser" }

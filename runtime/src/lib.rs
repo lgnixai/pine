@@ -10,15 +10,16 @@ use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
 };
-use tsr_lexer::globals::Positioned;
-use tsr_parser::ast::{Block, Type};
+use tsr_parser::input::Positioned;
+
+use tsr_parser::lexer::ast::{Block, Type};
 
 pub mod api;
 pub mod environment;
 pub mod eval;
 pub mod value;
 
-pub type FunctionTuple = (Visibility, bool, bool, bool, String, Vec<Parameter>, Type);
+pub type FunctionTuple = (Visibility, bool, bool, bool, String, Vec<Parameter>, Option<Positioned<Type>>);
 
 macro_rules! try_unpack {
     ($variant:path, $value:expr) => {

@@ -1,17 +1,15 @@
 use super::parse_expression;
 use crate::{
-    ast::{BinaryExpression, Expression},
-    tags::{not_tag, positioned},
+    lexer::ast::{BinaryExpression, Expression},
+    tags::{not_tag},
 };
 
 use nom::{combinator::map, sequence::pair};
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    token::Operator,
-    tokens::Tokens,
-};
 
-pub fn parse_simple_binary_expression(input: Tokens) -> TokenResult<Positioned<Expression>> {
+use crate::input::{Input, PineResult, Positioned, positioned};
+use crate::lexer::token::Operator;
+
+pub fn parse_simple_binary_expression(input: Input) -> PineResult<Positioned<Expression>> {
     positioned(map(pair(not_tag, parse_expression), |(operator, left)| {
         Expression::BinaryExpression(Box::new(operator.span.between(left.span).wrap(
             BinaryExpression {

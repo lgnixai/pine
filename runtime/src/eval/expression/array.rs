@@ -1,8 +1,9 @@
-use tsr_lexer::{globals::Positioned, util::BoolExt};
-use tsr_parser::ast::{ArraySize, Expression};
+use tsr_parser::input::Positioned;
+use tsr_parser::lexer::ast::{ArraySize, Expression};
 
 use crate::{value::Value, Runtime};
-
+use tsr_parser::lexer::util::VecExt;
+use tsr_parser::lexer::util::BoolExt;
 impl Runtime {
     pub fn eval_array(
         &mut self,
@@ -12,7 +13,11 @@ impl Runtime {
         let elements = elements
             .into_iter()
             .map(|expression| match self.eval_expression(expression) {
-                Value::Reference(path, scope) => todo!(),
+                Value::Reference(path, scope) => {
+
+                    //println!("=={:?},{:?}",path,scope);
+                    Value::None
+                },
                 value => value,
             })
             .collect::<Vec<_>>();

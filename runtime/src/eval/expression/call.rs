@@ -1,5 +1,6 @@
-use tsr_lexer::globals::Positioned;
-use tsr_parser::ast::{FunctionCallExpression, Type};
+use tsr_parser::input::Positioned;
+use tsr_parser::lexer::ast::{FunctionCallExpression, Type};
+
 
 use crate::{
     value::{self, ArrowParameter, ErrorCode, NativeFunction, Value}, FArguments, Runtime
@@ -9,7 +10,7 @@ impl Runtime {
     pub fn eval_call(&mut self, call: Positioned<FunctionCallExpression>) -> Value {
         let (span, call) = call.unpack();
         let func = match self.eval_expression(*call.function) {
-            Value::Reference(path, scope) => match todo!() {
+            //Value::Reference(path, scope) => match todo!() {
                 Value::Reference(path, scope) => self
                     .context
                     .lock()
@@ -19,8 +20,8 @@ impl Runtime {
                     .value
                     .clone(),
                 value => value,
-            },
-            value => value,
+            // },
+            // value => value,
         };
         let mut args = call
             .arguments
@@ -29,7 +30,7 @@ impl Runtime {
                 (
                     argument.span,
                     match self.eval_expression(argument) {
-                        Value::Reference(path, scope) => todo!(),
+                       //Value::Reference(path, scope) => todo!(),
                         value => value,
                     },
                 )
@@ -81,7 +82,7 @@ impl Runtime {
                                 parameters: params
                                     .into_iter()
                                     .map(|param| ArrowParameter {
-                                        name: param.name.value.0,
+                                        name: param.name.value.name,
                                         nullable: param.nullable.value,
                                         ty: Some(param.ty.value),
                                         default: param
@@ -126,9 +127,9 @@ impl Runtime {
                 self.remove_scope();
 
                 if let Some(value) = args.returns {
-                    if value.is_type_of(&ty) {
-                        return value;
-                    }
+                    // if value.is_type_of(&ty) {
+                    //     return value;
+                    // }
                 }
             }
             Value::Function(func) => match func.call(span, self, args, call.lambda) {

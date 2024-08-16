@@ -1,5 +1,5 @@
-use tsr_lexer::globals::Positioned;
-use tsr_parser::ast::VariableStatement;
+use tsr_parser::input::Positioned;
+use tsr_parser::lexer::ast::VariableStatement;
 
 use crate::{
     value::{ErrorCode, Value},
@@ -10,7 +10,7 @@ impl Runtime {
     pub fn declare_variable(&mut self, variables: Positioned<VariableStatement>) -> Value {
         let (span, variables) = variables.unpack();
         let mut last = Value::None;
-
+        println!("variables=={:?}",variables);
         for variable in variables.declarations {
             let (span, variable) = variable.unpack();
 
@@ -40,7 +40,7 @@ impl Runtime {
                 }
             }
 
-            last = self.set_variable(variable.name.value.0, value_span.wrap(value));
+            last = self.set_variable(variable.name.value.name, value_span.wrap(value));
         }
 
         last

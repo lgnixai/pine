@@ -4,7 +4,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 use std::vec::IntoIter;
 
-use tsr_lexer::util::VecExt;
+use tsr_parser::lexer::util::VecExt;
 
 use super::value::Value;
 

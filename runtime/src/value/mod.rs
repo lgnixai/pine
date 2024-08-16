@@ -8,11 +8,12 @@ use std::{
     fmt::{Display, Formatter},
     hash::{Hash, Hasher},
 };
-use tsr_lexer::globals::Span;
-use tsr_parser::ast::{
-    ArraySize, Block, IntersectionOrPrimaryType, Literal, PredefinedType, PrimaryType, Type,
-    UnionOrIntersectionOrPrimaryType,
-};
+
+use tsr_parser::lexer::ast::{ArraySize, Block, IntersectionOrPrimaryType, Literal, PredefinedType, PrimaryType, Type, UnionOrIntersectionOrPrimaryType};
+use derivative::Derivative;
+use std::sync::Arc;
+use tsr_parser::input::{Positioned, Span};
+
 
 pub trait Args {
     fn formatted(&self) -> Vec<String>;
@@ -92,7 +93,7 @@ fn format_message(message: &str, args: impl Args) -> String {
 /* macro_rules! errors {
     ($( $error_name:ident: $error_code:literal => $error_message:expr );*;) => {
         #[derive(PartialEq, Clone, Copy, Debug)]
-        pub enum ErrorCode {
+        pub enum.ts ErrorCode {
             $(
                 $error_name = $error_code
             ),*
@@ -184,6 +185,9 @@ pub struct MethodSignature {
 pub struct ConstructSignature {
     pub parameters: Vec<PropertySignature>,
     pub ty: Type,
+
+
+
 }
 
 #[derive(PartialEq, Clone, Debug)]
@@ -253,12 +257,13 @@ pub struct Function {
     pub is_static: bool,
     pub name: String,
     pub parameters: Vec<Parameter>,
-    pub ty: Type,
+    pub ty: Option<Positioned<Type>>,
     pub body: Block,
 }
 
-use derivative::Derivative;
-use std::sync::Arc;
+
+
+
 
 #[derive(Derivative, Clone)]
 #[derivative(Debug)]
@@ -266,7 +271,7 @@ pub struct NativeFunction {
     pub visibility: Visibility,
     pub name: String,
     pub parameters: Vec<Parameter>,
-    pub ty: Type,
+    pub ty: Option<Positioned<Type>>,
 
     #[derivative(Debug = "ignore")]
     pub body: Arc<dyn Fn(&mut FArguments)>,
@@ -430,7 +435,7 @@ impl Function {
                         parameters: params
                             .into_iter()
                             .map(|param| ArrowParameter {
-                                name: param.name.value.0,
+                                name: param.name.value.name,
                                 nullable: param.nullable.value,
                                 ty: Some(param.ty.value),
                                 default: param
@@ -587,7 +592,7 @@ impl Display for Value {
                 "[Function {}({}) => {}]",
                 function.name,
                 function.parameters.len(),
-                function.ty
+                function.ty.clone().unwrap().value
             ),
             Value::Interface {
                 name,
@@ -853,7 +858,7 @@ impl Value {
             Value::TypeAlias { name, ty } => todo!(),
             Value::NativeFunction(_) => todo!(),
             Value::ClassInstance(_) => PrimaryType::ThisType.into(),
-            Value::Reference(..) => todo!(),
+            Value::Reference(..) => PredefinedType::Void.into(),
         }
     }
 
@@ -902,6 +907,8 @@ impl From<Literal> for Value {
             Literal::Number(number) => Value::Number(number.value),
             Literal::Float(float) => Value::Float(float.value),
             Literal::Boolean(boolean) => Value::Boolean(boolean.value),
+            _ => panic!("Unhandled Literal variant"),
+
         }
     }
 }

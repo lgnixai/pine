@@ -1,0 +1,1 @@
+for<'a> fn(LocatedSpan<&'a str, ParserContext>) -> Result<(LocatedSpan<&'a str, ParserContext>, input::Span), nom::Err<VerboseError<LocatedSpan<&'a str, ParserContext>>>> {position1}

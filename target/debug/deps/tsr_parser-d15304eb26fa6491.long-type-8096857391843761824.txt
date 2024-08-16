@@ -1,0 +1,1 @@
+impl FnMut(LocatedSpan<&str, ParserContext>) -> Result<(LocatedSpan<&str, ParserContext>, (Vec<input::Positioned<ArrowParameter>>, Option<input::Positioned<lexer::ast::Type>>, input::Positioned<lexer::ast::Expression>)), nom::Err<VerboseError<LocatedSpan<&str, ParserContext>>>>

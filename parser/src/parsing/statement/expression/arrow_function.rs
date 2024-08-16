@@ -1,8 +1,8 @@
 use super::parse_expression;
 use crate::{
-    ast::{ArrowFunction, Expression},
+
     parsing::statement::{parse_arrow_parameter, parse_type},
-    tags::{colon_tag, comma_tag, fat_arrow_tag, paren_close_tag, paren_open_tag, positioned},
+    tags::{colon_tag, comma_tag, fat_arrow_tag, paren_close_tag, paren_open_tag},
 };
 
 use nom::{
@@ -10,13 +10,12 @@ use nom::{
     multi::separated_list0,
     sequence::{delimited, preceded, tuple},
 };
+use crate::input::{Input, PineResult, Positioned,positioned};
 
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    tokens::Tokens,
-};
 
-pub fn parse_arrow_function_expression(input: Tokens) -> TokenResult<Positioned<Expression>> {
+use crate::lexer::ast::{ArrowFunction, Expression};
+
+pub fn parse_arrow_function_expression(input: Input) -> PineResult<Positioned<Expression>> {
     positioned(map(
         positioned(tuple((
             delimited(

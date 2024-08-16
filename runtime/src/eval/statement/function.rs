@@ -1,5 +1,7 @@
-use tsr_lexer::{globals::Positioned, token::Modifier};
-use tsr_parser::ast::FunctionDeclaration;
+use tsr_parser::input::Positioned;
+use tsr_parser::lexer::ast::FunctionDeclaration;
+use tsr_parser::lexer::token::Modifier;
+
 
 use crate::{value::{Function, Parameter, Value, Visibility}, Runtime};
 
@@ -27,7 +29,7 @@ impl Runtime {
                 .parameters
                 .into_iter()
                 .map(|param| Parameter {
-                    name: param.value.name.value.0,
+                    name: param.value.name.value.name,
                     nullable: param.value.nullable.value,
                     ty: param.value.ty.value,
                     default: param
@@ -38,15 +40,15 @@ impl Runtime {
                 .collect();
 
             self.set_variable(
-                function.name.value.0.clone(),
+                function.name.value.name.clone(),
                 span.wrap(Value::Function(Function {
                     visibility,
                     overloads: Vec::default(),
                     is_async,
                     is_static,
-                    name: function.name.value.0,
+                    name: function.name.value.name,
                     parameters,
-                    ty: function.ty.value,
+                    ty: Option::from(function.ty),
                     body,
                 })),
             );

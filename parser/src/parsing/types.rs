@@ -1,17 +1,17 @@
 use super::{
-    parse_ident, parse_literal,
+
     statement::{parse_parameter, parse_type_member, parse_type_parameter},
 };
 
 use crate::{
-    ast::{
+    lexer::ast::{
         ArraySize, IntersectionOrPrimaryType, Literal, PredefinedType, PrimaryType, Type,
         UnionOrIntersectionOrPrimaryType,
     },
     tags::{
         and_tag, any_tag, boolean_tag, brace_close_tag, brace_open_tag, bracket_close_tag,
         bracket_open_tag, comma_tag, fat_arrow_tag, float_tag, gt_tag, lt_tag, new_tag, number_tag,
-        or_tag, paren_close_tag, paren_open_tag, positioned, semi_tag, string_tag, symbol_tag,
+        or_tag, paren_close_tag, paren_open_tag, semi_tag, string_tag, symbol_tag,
         this_tag, void_tag,
     },
 };
@@ -24,12 +24,12 @@ use nom::{
     sequence::{delimited, pair, preceded, terminated, tuple},
 };
 
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    tokens::Tokens,
-};
 
-pub fn parse_type(input: Tokens) -> TokenResult<Positioned<Type>> {
+use crate::input::{Input, PineResult, Positioned, positioned};
+use crate::parsing::parse_identifier::parse_identifier;
+use crate::parsing::parse_literal::parse_literal;
+
+pub fn parse_type(input: Input) -> PineResult<Positioned<Type>> {
     positioned(alt((
         map(
             preceded(
@@ -89,8 +89,7 @@ pub fn parse_type(input: Tokens) -> TokenResult<Positioned<Type>> {
 }
 
 pub fn parse_union_or_intersection_or_primary_type(
-    input: Tokens,
-) -> TokenResult<UnionOrIntersectionOrPrimaryType> {
+    input: Input) -> PineResult<UnionOrIntersectionOrPrimaryType> {
     alt((
         map(
             tuple((
@@ -113,7 +112,7 @@ pub fn parse_union_or_intersection_or_primary_type(
     ))(input)
 }
 
-pub fn parse_intersection_or_primary_type(input: Tokens) -> TokenResult<IntersectionOrPrimaryType> {
+pub fn parse_intersection_or_primary_type(input: Input) -> PineResult<IntersectionOrPrimaryType> {
     alt((
         map(
             tuple((
@@ -136,7 +135,7 @@ pub fn parse_intersection_or_primary_type(input: Tokens) -> TokenResult<Intersec
     ))(input)
 }
 
-pub fn parse_primary_type(input: Tokens) -> TokenResult<PrimaryType> {
+pub fn parse_primary_type(input: Input) -> PineResult<PrimaryType> {
     alt((
         map(
             delimited(paren_open_tag, parse_type, paren_close_tag),
@@ -145,10 +144,10 @@ pub fn parse_primary_type(input: Tokens) -> TokenResult<PrimaryType> {
         map(parse_predefined_type, PrimaryType::PredefinedType),
         map(
             pair(
-                parse_ident,
+                parse_identifier,
                 opt(delimited(
                     lt_tag,
-                    separated_list1(comma_tag, parse_ident),
+                    separated_list1(comma_tag, parse_identifier),
                     gt_tag,
                 )),
             ),
@@ -202,16 +201,36 @@ pub fn parse_primary_type(input: Tokens) -> TokenResult<PrimaryType> {
     ))(input)
 }
 
-pub fn parse_predefined_type(input: Tokens) -> TokenResult<PredefinedType> {
+// pub fn parse_predefined_type(input: Input) -> PineResult<PredefinedType> {
+//     let input_clone = input.clone();
+//
+//     alt((
+//         value(PredefinedType::Any, any_tag),
+//         value(PredefinedType::Number, number_tag),
+//         value(PredefinedType::Float, float_tag),
+//         value(PredefinedType::Boolean, boolean_tag),
+//         value(PredefinedType::String, string_tag),
+//         map_res(parse_literal, |literal| match literal.value {
+//             Literal::String(string) => Ok(PredefinedType::StringLiteral(string.value)),
+//             _ => Err(Error::new(input_clone.clone(), ErrorKind::Not)),
+//         }),
+//         value(PredefinedType::Symbol, symbol_tag),
+//         value(PredefinedType::Void, void_tag),
+//     ))(input)
+// }
+
+pub fn parse_predefined_type(input: Input) -> PineResult<PredefinedType> {
+    //let input_clone = &input;
+    let input_clone = input.clone();
     alt((
         value(PredefinedType::Any, any_tag),
         value(PredefinedType::Number, number_tag),
         value(PredefinedType::Float, float_tag),
         value(PredefinedType::Boolean, boolean_tag),
         value(PredefinedType::String, string_tag),
-        map_res(parse_literal, |literal| match literal.value {
+        map_res(parse_literal, move |literal| match literal.value {
             Literal::String(string) => Ok(PredefinedType::StringLiteral(string.value)),
-            _ => Err(Error::new(input, ErrorKind::Not)),
+            _ => Err(Error::new(input_clone.clone(), ErrorKind::Not)),
         }),
         value(PredefinedType::Symbol, symbol_tag),
         value(PredefinedType::Void, void_tag),

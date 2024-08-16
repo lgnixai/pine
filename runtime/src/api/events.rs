@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use tsr_parser::ast::ArraySize;
-use tsr_parser::ast::PredefinedType;
-use tsr_parser::ast::PrimaryType;
+use tsr_parser::lexer::ast::{ArraySize,PredefinedType,PrimaryType};
+
 
 use crate::value::native::Module;
 use crate::value::native::NativeModule;
@@ -20,7 +19,14 @@ impl Events {
     fn hello_world() {
 
     }
+    #[func(name = "Genv", args = [("key", PredefinedType::Any),("value", PredefinedType::Any)], returns = PredefinedType::String)]
+    fn genv(&self, args: &FArguments) -> Option<impl Into<Value>> {
+        //let pretty = args.get_boolean("pretty");
+        println!("args:{:?}",args);
 
+        args.get("key").map(|key| format!("key:{key:#}"));
+        args.get("value").map(|value| format!("value:{value:#}"))
+    }
     #[func(name = "getType", args = [("value", PredefinedType::Any)], returns = PredefinedType::String)]
     fn get_type(&self, args: &FArguments) -> Option<impl Into<Value>> {
         args.get("data")
@@ -44,13 +50,13 @@ impl Events {
                                 ObjectBuilder::default()
                                     .prop("name", param.name)
                                     .prop("nullable", param.nullable)
-                                    .prop("type", param.ty.to_string())
+                                    //.prop("type", param.ty.to_string())
                                     .prop("haveDefaultValue", param.default.is_some())
                                     .build()
                             })
                             .collect::<Vec<_>>(),
                     )
-                    .prop("returnType", ty.to_string())
+                    //.prop("returnType", ty.to_string())
                     .build()
             },
         )

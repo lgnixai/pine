@@ -8,7 +8,7 @@ publish = false
 
 [dev-dependencies]
 tsr-macro = { path  = "../macro" }
-tsr-lexer = { path  = "../lexer" }
+
 tsr-parser = { path  = "../parser" }
 tsr-runtime = { path  = "../runtime" }
 

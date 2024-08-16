@@ -1,25 +1,25 @@
-use super::{super::parse_code_block, parse_call_signature, parse_ident};
-use crate::{
-    ast::FunctionDeclaration,
-    tags::{async_tag, function_tag, positioned},
-};
+
 
 use nom::{
     combinator::{map, opt, value},
     sequence::{preceded, tuple},
 };
 
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    token::Modifier,
-    tokens::Tokens,
-};
 
-pub fn parse_function_declaration(input: Tokens) -> TokenResult<Positioned<FunctionDeclaration>> {
+
+use crate::input::{Input, PineResult, Positioned, positioned};
+use crate::lexer::ast::FunctionDeclaration;
+use crate::lexer::token::Modifier;
+use crate::parsing::parse_code_block::parse_code_block;
+use crate::parsing::parse_identifier::parse_identifier;
+use crate::parsing::signatures::parse_call_signature;
+use crate::tags::{async_tag, function_tag};
+
+pub fn parse_function_declaration(input: Input) ->PineResult<Positioned<FunctionDeclaration>> {
     positioned(map(
         tuple((
             opt(positioned(value(Modifier::Async, async_tag))),
-            preceded(function_tag, parse_ident),
+            preceded(function_tag, parse_identifier),
             parse_call_signature,
             opt(parse_code_block),
         )),

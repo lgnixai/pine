@@ -1,4 +1,4 @@
-use tsr_parser::ast::PredefinedType;
+use tsr_parser::lexer::ast::{ArraySize,PredefinedType,PrimaryType};
 
 use crate::value::native::Module;
 use crate::value::native::NativeModule;

@@ -1,0 +1,7 @@
+/Users/leven/space/vm/pine/target/debug/deps/libnom_locate-17ff54cb3403933c.rmeta: /Users/leven/.cargo/registry/src/mirrors.aliyun.com-8754fae0eb2f08f1/nom_locate-4.2.0/src/lib.rs
+
+/Users/leven/space/vm/pine/target/debug/deps/libnom_locate-17ff54cb3403933c.rlib: /Users/leven/.cargo/registry/src/mirrors.aliyun.com-8754fae0eb2f08f1/nom_locate-4.2.0/src/lib.rs
+
+/Users/leven/space/vm/pine/target/debug/deps/nom_locate-17ff54cb3403933c.d: /Users/leven/.cargo/registry/src/mirrors.aliyun.com-8754fae0eb2f08f1/nom_locate-4.2.0/src/lib.rs
+
+/Users/leven/.cargo/registry/src/mirrors.aliyun.com-8754fae0eb2f08f1/nom_locate-4.2.0/src/lib.rs:

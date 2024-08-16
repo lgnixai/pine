@@ -1,6 +1,6 @@
 use super::{parse_expression, primitives::parse_ident_expression};
 use crate::{
-    ast::{Expression, IndexExpression},
+    lexer::ast::{Expression, IndexExpression},
     tags::{bracket_close_tag, bracket_open_tag, dot_tag},
 };
 
@@ -9,16 +9,13 @@ use nom::{
     combinator::map,
     sequence::{delimited, preceded},
 };
+use crate::input::{Input, PineResult, Positioned};
 
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    tokens::Tokens,
-};
 
 pub fn parse_index_expression(
-    input: Tokens,
+    input: Input,
     target: Positioned<Expression>,
-) -> TokenResult<Positioned<Expression>> {
+) -> PineResult<Positioned<Expression>> {
     map(
         alt((
             delimited(bracket_open_tag, parse_expression, bracket_close_tag),

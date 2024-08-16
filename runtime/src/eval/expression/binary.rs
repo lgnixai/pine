@@ -1,21 +1,59 @@
-use tsr_lexer::token::Operator;
-use tsr_parser::ast::BinaryExpression;
-
+use tsr_parser::lexer::ast::BinaryExpression;
+use tsr_parser::lexer::token::Operator;
 use crate::{value::Value, Runtime};
 
 impl Runtime {
     pub fn eval_binary_expression(&mut self, expression: BinaryExpression) -> Value {
+        // let left = self.eval_expression(expression.left);
+        // let right = self.eval_expression(expression.right);
+
         let left = self.eval_expression(expression.left);
         let right = self.eval_expression(expression.right);
 
-        println!("{left} {:?} {right}", expression.operator.value);
+        let left = self.resolve_if_reference(left);
+        let right = self.resolve_if_reference(right);
+
+        println!("left{left} op {:?}right {right}", expression.operator.value);
+        //println!("{left} {:?} {right}", expression.operator.value);
 
         match expression.operator.value {
             Operator::And => todo!(),
             Operator::AndAnd => todo!(),
             Operator::Plus => match (left, right) {
+                // (Value::String(first), Value::String(second)) => Value::String(first + &second),
+                // (Value::Number(first), Value::Number(second)) => Value::Number(first + second),
+
                 (Value::String(first), Value::String(second)) => Value::String(first + &second),
                 (Value::Number(first), Value::Number(second)) => Value::Number(first + second),
+                (Value::Reference(path, scope), Value::Number(second)) => {
+                    match self.resolve_reference(&path, scope) {
+                        Ok(value) => match value {
+                            Value::Number(first) => Value::Number(first + second),
+                            _ => Value::None
+                        },
+                        Err(e) => Value::None,
+                    }
+                }
+                (Value::Number(first), Value::Reference(path, scope), ) => {
+                    match self.resolve_reference(&path, scope) {
+                        Ok(value) => match value {
+                            Value::Number(second) => Value::Number(first + second),
+                            _ => Value::None
+                        },
+                        Err(e) => Value::None,
+                    }
+                }
+                (Value::Reference(left_path, left_scope), Value::Reference(right_path, right_scope)) => {
+                    match (self.resolve_reference(&left_path, left_scope), self.resolve_reference(&right_path, right_scope)) {
+                        (Ok(left_value), Ok(right_value)) => match (left_value, right_value) {
+                            (Value::Number(first), Value::Number(second)) => Value::Number(first + second),
+                            (Value::String(first), Value::String(second)) => Value::String(first + &second),
+                            // 可以根据需要添加其他类型的组合
+                            _ => Value::None // 或者返回一个错误
+                        },
+                        _ => Value::None // 如果任何一个引用解析失败，返回 None 或错误
+                    }
+                }
                 (_, _) => todo!(),
             },
             Operator::Star => match (left, right) {
@@ -79,7 +117,14 @@ impl Runtime {
 
                     Value::None
                 }
-                (_, _) => todo!(),
+                (_, _) => {
+                    // let left = self.resolve_if_reference(left);
+                    // let left_clone = left.clone();
+                    // let right_clone = right.clone();
+                    //println!("{:?}:{:?}", left_clone, right_clone);
+                    //println!("{:?}:{:?}",left.clone(),right.clone());
+                    Value::None
+                }
             },
             Operator::Ne => Value::Boolean(left != right),
             Operator::Le => todo!(),

@@ -1,14 +1,14 @@
 use super::{
-    parse_ident,
+
     statement::{parse_parameter, parse_property_name, parse_type_parameter},
     types::parse_type,
 };
 
 use crate::{
-    ast::{CallSignature, ConstructSignature, IndexSignature, MethodSignature, PropertySignature},
+    lexer::ast::{CallSignature, ConstructSignature, IndexSignature, MethodSignature, PropertySignature},
     tags::{
         bracket_close_tag, bracket_open_tag, colon_tag, comma_tag, gt_tag, lt_tag, new_tag,
-        paren_close_tag, paren_open_tag, positioned, question_tag,
+        paren_close_tag, paren_open_tag, question_tag,
     },
 };
 
@@ -17,13 +17,11 @@ use nom::{
     multi::{separated_list0, separated_list1},
     sequence::{delimited, pair, preceded, tuple},
 };
+use crate::input::{Input, PineResult, Positioned, positioned};
+use crate::parsing::parse_identifier::parse_identifier;
 
-use tsr_lexer::{
-    globals::{Positioned, TokenResult},
-    tokens::Tokens,
-};
 
-pub fn parse_call_signature(input: Tokens) -> TokenResult<Positioned<CallSignature>> {
+pub fn parse_call_signature(input: Input) -> PineResult<Positioned<CallSignature>> {
     positioned(map(
         tuple((
             opt(delimited(
@@ -36,26 +34,33 @@ pub fn parse_call_signature(input: Tokens) -> TokenResult<Positioned<CallSignatu
                 separated_list0(comma_tag, parse_parameter),
                 paren_close_tag,
             ),
-            preceded(colon_tag, parse_type),
+            opt (preceded(colon_tag, parse_type)),
         )),
         |(type_parameters, parameters, ty)| {
+
+            // let ty = ty.map(|ty| {
+            //     // Perform the necessary transformation on ty here
+            //     // For example, if you need to wrap it in a specific type or modify it
+            //     // Replace the following line with the actual transformation logic
+            //     ty
+            // });
             CallSignature(type_parameters.unwrap_or_default(), parameters, ty)
         },
     ))(input)
 }
 
-pub fn parse_construct_signature(input: Tokens) -> TokenResult<Positioned<ConstructSignature>> {
+pub fn parse_construct_signature(input: Input) -> PineResult<Positioned<ConstructSignature>> {
     positioned(map(preceded(new_tag, parse_call_signature), |signature| {
         ConstructSignature(signature.value.0, signature.value.1, signature.value.2)
     }))(input)
 }
 
-pub fn parse_index_signature(input: Tokens) -> TokenResult<Positioned<IndexSignature>> {
+pub fn parse_index_signature(input: Input) -> PineResult<Positioned<IndexSignature>> {
     positioned(map(
         tuple((
             delimited(
                 bracket_open_tag,
-                pair(parse_ident, preceded(colon_tag, parse_type)),
+                pair(parse_identifier, preceded(colon_tag, parse_type)),
                 bracket_close_tag,
             ),
             preceded(colon_tag, parse_type),
@@ -64,7 +69,7 @@ pub fn parse_index_signature(input: Tokens) -> TokenResult<Positioned<IndexSigna
     ))(input)
 }
 
-pub fn parse_method_signature(input: Tokens) -> TokenResult<Positioned<MethodSignature>> {
+pub fn parse_method_signature(input: Input) -> PineResult<Positioned<MethodSignature>> {
     positioned(map(
         tuple((
             parse_property_name,
@@ -81,10 +86,10 @@ pub fn parse_method_signature(input: Tokens) -> TokenResult<Positioned<MethodSig
     ))(input)
 }
 
-pub fn parse_property_signature(input: Tokens) -> TokenResult<Positioned<PropertySignature>> {
+pub fn parse_property_signature(input: Input) -> PineResult<Positioned<PropertySignature>> {
     positioned(map(
         tuple((
-            parse_ident,
+            parse_identifier,
             positioned(opt(question_tag)),
             colon_tag,
             parse_type,

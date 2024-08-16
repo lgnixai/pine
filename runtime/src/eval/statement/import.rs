@@ -1,5 +1,5 @@
-use tsr_lexer::globals::Positioned;
-use tsr_parser::ast::{ImportClause, ImportDeclaration, Literal};
+use tsr_parser::input::Positioned;
+use tsr_parser::lexer::ast::{ImportClause, ImportDeclaration, Literal};
 
 use crate::{value::{builders::ObjectBuilder, ErrorCode, Value}, Runtime};
 
@@ -30,9 +30,9 @@ impl Runtime {
                             if let Some(value) = module
                                 .exports
                                 .iter()
-                                .find(|export| export.0 == specifier.name.value.0)
+                                .find(|export| export.0 == specifier.name.value.name)
                             {
-                                self.set_variable(name.0, span.wrap(value.1.clone()));
+                                self.set_variable(name.name, span.wrap(value.1.clone()));
                             } else {
                                 self.error = Some(Value::error(
                                     name_span,
@@ -60,7 +60,7 @@ impl Runtime {
                             object = object.prop(key, value.clone());
                         }
 
-                        self.set_variable(value.value.0, value.span.wrap(object.build()));
+                        self.set_variable(value.value.name, value.span.wrap(object.build()));
                     }
                 }
             }

@@ -1,5 +1,4 @@
-use tsr_parser::ast::Literal;
-
+use tsr_parser::lexer::ast::Literal;
 use crate::{value::Value, Runtime};
 
 impl Runtime {
@@ -9,6 +8,9 @@ impl Runtime {
             Literal::Number(number) => Value::Number(number.value),
             Literal::Float(float) => Value::Float(float.value),
             Literal::Boolean(boolean) => Value::Boolean(boolean.value),
+            _ => {
+                Value::String("asdf".to_string())
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-use tsr_parser::ast::{ArraySize, IndexExpression, PredefinedType, PrimaryType};
+use tsr_parser::lexer::ast::{ArraySize, IndexExpression, PredefinedType, PrimaryType};
 
 use crate::{value::{ErrorCode, Value}, FunctionBuilder, Runtime};
 
@@ -69,13 +69,52 @@ impl Runtime {
             (Value::ClassInstance(instance), Value::String(key)) => instance
                 .get_field_moved(key)
                 .map_or(Value::None, |field| field.value),
-            (Value::Reference(path, scope), Value::Reference(second_path, _)) => {
-                if second_path[0] == "push"
-                    && todo!()
-                {
-                    Value::None
-                } else {
-                    Value::Reference([path, second_path].concat(), scope)
+            // (Value::Reference(path, scope), Value::Reference(second_path, _)) => {
+            //     if second_path[0] == "push"
+            //         && todo!()
+            //     {
+            //         Value::None
+            //     } else {
+            //         Value::Reference([path, second_path].concat(), scope)
+            //     }
+            // }
+
+
+            (Value::Reference(path, scope), Value::Number(index)) => {
+                match self.resolve_reference(&path, scope) {
+                    Ok(value) => match value {
+                        Value::Array(elements, _) =>
+                            elements.get(index as usize).unwrap_or(&Value::None).clone(),
+
+                        _ => Value::None
+                    },
+                    Err(e) => Value::None,
+                }
+            }
+
+            (Value::Reference(left_path, left_scope), Value::Reference(right_path, right_scope)) => {
+                let key1 = right_path.last();
+                let key = (key1.unwrap());
+
+                println!("=={:?}", right_path.last());
+                match self.resolve_reference(&left_path, left_scope) {
+                    (Ok(left_value)) => match (left_value) {
+                        (Value::Enum(enumeration)) => enumeration
+                            .get_moved(key)
+                            .map(|member| *member.init)
+                            .unwrap_or(Value::error(
+                                target_span,
+                                ErrorCode::Implementing,
+                                "no such field",
+                            )),
+                        (Value::Object(properties)) => {
+                            properties.get(&Value::String(key.to_string())).unwrap_or(&Value::None).clone()
+                        }
+
+                        // 可以根据需要添加其他类型的组合
+                        _ => Value::None // 或者返回一个错误
+                    },
+                    _ => Value::None // 如果任何一个引用解析失败，返回 None 或错误
                 }
             }
             _ => Value::error(target_span, ErrorCode::Reference, "can't index"),
