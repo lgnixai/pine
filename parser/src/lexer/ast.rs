@@ -1,5 +1,6 @@
 use core::fmt;
-
+use crate::ast::node::variable::VariableStatement;
+use crate::ast::types::types::DeclarationMode;
 
 
 use crate::input::Positioned;
@@ -322,6 +323,8 @@ pub enum PrimaryType {
 
 #[derive(PartialEq, Debug, Clone)]
 pub enum PredefinedType {
+    Int,
+    Color,
     Any,
     Number,
     Float,
@@ -372,7 +375,11 @@ impl From<Vec<PrimaryType>> for Type {
 impl fmt::Display for PredefinedType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            PredefinedType::Int => write!(f, "int"),
+            PredefinedType::Color => write!(f, "color"),
+
             PredefinedType::Any => write!(f, "any"),
+
             PredefinedType::Number => write!(f, "number"),
             PredefinedType::Float => write!(f, "float"),
             PredefinedType::Boolean => write!(f, "boolean"),
@@ -675,19 +682,7 @@ pub struct TypeAliasDeclaration {
     pub ty: Positioned<Type>,
 }
 
-#[derive(PartialEq, Debug, Clone)]
-pub struct VariableStatement {
-    pub mutable: Positioned<bool>,
-    pub declarations: Vec<Positioned<VariableDeclaration>>,
-}
 
-#[derive(PartialEq, Debug, Clone)]
-pub struct VariableDeclaration {
-    pub name: Positioned<Identifier>,
-    pub ty: Option<Positioned<Type>>,
-    pub nullable: Positioned<bool>,
-    pub initializer: Option<Positioned<Expression>>,
-}
 
 #[derive(PartialEq, Debug, Clone)]
 pub struct SwitchVariant {
@@ -732,6 +727,7 @@ pub enum Expression {
     ArrowFunction(Box<Positioned<ArrowFunction>>),
     This,
     Null,
+    Na,
 }
 
 #[derive(PartialEq, Debug, Clone)]

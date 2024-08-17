@@ -28,6 +28,7 @@ use nom::{
 use crate::input::{Input, PineResult, Positioned, positioned};
 use crate::parsing::parse_identifier::parse_identifier;
 use crate::parsing::parse_literal::parse_literal;
+use crate::tags::{color_tag, int_tag};
 
 pub fn parse_type(input: Input) -> PineResult<Positioned<Type>> {
     positioned(alt((
@@ -223,6 +224,8 @@ pub fn parse_predefined_type(input: Input) -> PineResult<PredefinedType> {
     //let input_clone = &input;
     let input_clone = input.clone();
     alt((
+        value(PredefinedType::Int, int_tag),
+        value(PredefinedType::Color, color_tag),
         value(PredefinedType::Any, any_tag),
         value(PredefinedType::Number, number_tag),
         value(PredefinedType::Float, float_tag),

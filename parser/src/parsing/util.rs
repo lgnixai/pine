@@ -13,7 +13,8 @@ use nom::{
     sequence::{delimited, pair, preceded, terminated, tuple},
     Parser,
 };
-use crate::input::{Input, NomError, PineResult, spaced};
+use crate::error::NomError;
+use crate::input::{Input, PineResult, spaced};
 use crate::lexer::binary_operator::BinaryOperator;
 
 const KEYWORDS: &[&str] = &[
@@ -61,7 +62,7 @@ pub fn surround_brackets<'a, F, O>(
         preceded(multispace0, tag(brackets.close())),
     )
 }
-fn sign(sign: &'static str) -> impl Fn(Input) -> PineResult<()> + Clone {
+pub fn sign(sign: &'static str) -> impl Fn(Input) -> PineResult<()> + Clone {
     move |input| {
         let parser = context("sign", token(tag(sign)));
 
@@ -76,7 +77,7 @@ fn sign(sign: &'static str) -> impl Fn(Input) -> PineResult<()> + Clone {
     }
 }
 
-fn token<'a, O>(
+pub fn token<'a, O>(
     mut parser: impl Parser<Input<'a>, O, NomError<'a>>,
 ) -> impl FnMut(Input<'a>) -> PineResult<'a, O> {
     move |input| {
@@ -86,7 +87,7 @@ fn token<'a, O>(
     }
 }
 
-fn blank(input: Input) -> PineResult<()> {
+pub fn blank(input: Input) -> PineResult<()> {
     value(
         (),
         many0_count(alt((value((), multispace1), skipped_comment))),

@@ -7,3 +7,5 @@ mod value;
 mod from;
 
 pub mod comment;
+pub mod types;
+pub mod node;

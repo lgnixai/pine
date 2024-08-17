@@ -25,6 +25,8 @@ macro_rules! tags {
 
 tags! {
     const_tag => "const";
+    var_tag => "var";
+    varip_tag => "varip";
     let_tag => "let";
     // constructor_tag => Token::ReservedWord(ReservedWord::Constructor);
     // class_tag => Token::ReservedWord(ReservedWord::Class);
@@ -93,6 +95,8 @@ tags! {
     async_tag => "async";
     //
      any_tag => "any";
+     int_tag => "int";
+     color_tag => "color";
      number_tag => "number";
      float_tag =>"float";
 

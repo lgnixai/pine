@@ -1,5 +1,6 @@
+use tsr_parser::ast::node::variable::VariableStatement;
 use tsr_parser::input::Positioned;
-use tsr_parser::lexer::ast::VariableStatement;
+
 
 use crate::{
     value::{ErrorCode, Value},
@@ -13,10 +14,10 @@ impl Runtime {
         println!("variables=={:?}",variables);
         for variable in variables.declarations {
             let (span, variable) = variable.unpack();
-
-            if !variable.nullable.value && variable.initializer.is_none() {
-                return Value::error(span, ErrorCode::Type, "expected anything, but got nothing");
-            }
+            //todo() 是否可以为空
+            // if !variable.nullable.value && variable.initializer.is_none() {
+            //     return Value::error(span, ErrorCode::Type, "expected anything, but got nothing");
+            // }
 
             let (value_span, value) = if let Some(expression) = variable.initializer {
                 (

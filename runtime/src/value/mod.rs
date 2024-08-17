@@ -725,6 +725,8 @@ impl Value {
                         PrimaryType::ParenthesizedType(ty) => self.is_type_of(ty),
                         PrimaryType::PredefinedType(ty) => match ty {
                             PredefinedType::Any => true,
+                            PredefinedType::Int => matches!(self, Value::Number(_)),
+                            PredefinedType::Color => matches!(self, Value::String(_)),
                             PredefinedType::Number => matches!(self, Value::Number(_)),
                             PredefinedType::Float => matches!(self, Value::Float(_)),
                             PredefinedType::Boolean => matches!(self, Value::Boolean(_)),
@@ -736,6 +738,7 @@ impl Value {
                             PredefinedType::Symbol => true,
                             PredefinedType::Void => matches!(self, Value::None),
                             PredefinedType::Null => matches!(self, Value::Null),
+
                         },
                         PrimaryType::TypeReference(_, _) => true,
                         PrimaryType::ObjectType(members) => match self {

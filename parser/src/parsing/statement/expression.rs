@@ -25,8 +25,9 @@ use nom::{
     Err,
 };
 use nom::error::{ParseError, VerboseError};
+use crate::error::NomError;
 
-use crate::input::{Input, NomError, PineResult, Positioned};
+use crate::input::{Input, PineResult, Positioned, spaced};
 use crate::lexer::ast::{BinaryExpression, Expression, Infix, Precedence};
 use crate::lexer::delimiters::lex_delimiter;
 use crate::lexer::operators::lex_operator;
@@ -78,84 +79,96 @@ impl FromRef<Positioned<Token>> for PrecedencedOperation {
     }
 }
 
-pub fn lex_token(input: Input) -> PineResult<Positioned<Token>> {
-    alt((
-        lex_punctuation,
-        lex_operator,
-        lex_delimiter,
-    ))(input)
-}
+
 
 pub fn parse_binary_operation_expression(
     input: Input,
     left: Positioned<Expression>,
 ) -> PineResult<Positioned<Expression>> {
-    let (_, token) = lex_token(input.clone())?;
 
+    match spaced(lex_operator)(input.clone()) {
+        Ok(tokens) => {
+           // print!("b1111");
 
-    let (precedence, maybe_op) = PrecedencedOperation::from_ref(&token);
-    //let error = NomError::from_error_kind(input, ErrorKind::Tag);
+            let (input, token) = (tokens.0,tokens.1);
 
-    // 返回一个自定义错误
-    //Err(nom::Err::Error(error))
-    match maybe_op {
-        None => Err(Err::Error(NomError::from_error_kind(input, ErrorKind::Tag))),
-        Some(operation) => {
-            let operator = operation.wrap(match &operation.value {
-                Infix::Increment => Operator::PlusPlus,
-                Infix::Decrement => Operator::MinusMinus,
-                Infix::Plus => Operator::Plus,
-                Infix::Minus => Operator::Minus,
-                Infix::Divide => Operator::Slash,
-                Infix::Multiply => Operator::Star,
-                Infix::Assign => Operator::Eq,
-                Infix::Inverse => Operator::Not,
-                Infix::Equal => Operator::EqEq,
-                Infix::NotEqual => Operator::Ne,
-                Infix::GreaterThanEqual => Operator::Gt,
-                Infix::LessThanEqual => Operator::Lt,
-                Infix::GreaterThan => Operator::Ge,
-                Infix::LessThan => Operator::Le,
-            });
+            //print!("b1111{:?},{:?},{:?}",token,left,input);
+            let (precedence, maybe_op) = PrecedencedOperation::from_ref(&token);
+            //let error = NomError::from_error_kind(input, ErrorKind::Tag);
+            //print!("b1111{:?},{:?},{:?},{:?}",token,left,input,maybe_op);
 
-            if matches!(
+            // 返回一个自定义错误
+            //Err(nom::Err::Error(error))
+            match maybe_op {
+                None => Err(Err::Error(NomError::from_error_kind(input, ErrorKind::Tag))),
+                Some(operation) => {
+                    let operator = operation.wrap(match &operation.value {
+                        Infix::Increment => Operator::PlusPlus,
+                        Infix::Decrement => Operator::MinusMinus,
+                        Infix::Plus => Operator::Plus,
+                        Infix::Minus => Operator::Minus,
+                        Infix::Divide => Operator::Slash,
+                        Infix::Multiply => Operator::Star,
+                        Infix::Assign => Operator::Eq,
+                        Infix::Inverse => Operator::Not,
+                        Infix::Equal => Operator::EqEq,
+                        Infix::NotEqual => Operator::Ne,
+                        Infix::GreaterThanEqual => Operator::Gt,
+                        Infix::LessThanEqual => Operator::Lt,
+                        Infix::GreaterThan => Operator::Ge,
+                        Infix::LessThan => Operator::Le,
+                    });
+                    //println!("A1111{:?},{:?}",operation,operation.value);
+                    if matches!(
                     operation.value,
                     Infix::Increment | Infix::Decrement | Infix::Inverse
                 ) {
-                let distance = if matches!(operation.value, Infix::Increment | Infix::Decrement)
-                {
-                    left.between(&operation)
-                } else {
-                    operation.between(&left)
-                };
 
-                Ok((
-                    input,
-                    distance.wrap(Expression::BinaryExpression(Box::new(distance.wrap(
-                        BinaryExpression {
-                            operator,
-                            right: left.wrap(Expression::Null),
-                            left,
-                        },
-                    )))),
-                ))
-            } else {
-                let (input, right) = parse_pratt_expr(input, precedence)?;
-                let distance = left.between(&right);
+                        println!("A2222");
+                        let distance = if matches!(operation.value, Infix::Increment | Infix::Decrement)
+                        {
+                            left.between(&operation)
+                        } else {
+                            operation.between(&left)
+                        };
+                        println!("A3333");
+                        Ok((
+                            input,
+                            distance.wrap(Expression::BinaryExpression(Box::new(distance.wrap(
+                                BinaryExpression {
+                                    operator,
+                                    right: left.wrap(Expression::Null),
+                                    left,
+                                },
+                            )))),
+                        ))
+                    } else {
+                        //println!("A4444{:?}",input);
+                        let (input, right) = parse_pratt_expr(input, precedence)?;
+                        let distance = left.between(&right);
 
-                Ok((
-                    input,
-                    distance.wrap(Expression::BinaryExpression(Box::new(distance.wrap(
-                        BinaryExpression {
-                            operator,
-                            left,
-                            right,
-                        },
-                    )))),
-                ))
+                        Ok((
+                            input,
+                            distance.wrap(Expression::BinaryExpression(Box::new(distance.wrap(
+                                BinaryExpression {
+                                    operator,
+                                    left,
+                                    right,
+                                },
+                            )))),
+                        ))
+                    }
+                }
             }
         }
+        Err(_) => {
+
+            print!("b00000");
+            //Err(Err::Error(Error::new(input, ErrorKind::Tag)))
+            Err(Err::Error(NomError::from_error_kind(input.clone(), ErrorKind::Tag)))
+        }
     }
+
 }
 
 pub fn parse_pratt_expr(
@@ -163,7 +176,7 @@ pub fn parse_pratt_expr(
     precedence: Precedence,
 ) -> PineResult<Positioned<Expression>> {
     let (input, left) = parse_atom(input)?;
-
+    //println!("token22,{:?}",left);
     go_parse_pratt_expr(input, precedence, left)
 }
 
@@ -173,33 +186,59 @@ pub fn go_parse_pratt_expr(
     left: Positioned<Expression>,
 ) -> PineResult<Positioned<Expression>> {
 
-    let (second_input, token) = lex_token(input.clone())?;
 
-   // let (second_input, token) = take(1usize)(input)?;
+    match spaced(lex_operator)(input.clone()) {
+        Ok(tokens) => {
+           // println!("4444");
+            let (_, token) = spaced(lex_operator)(input.clone())?;
 
-    // if token.is_empty() {
-    //     Ok((second_input, left))
-    // } else {
-        let p = PrecedencedOperation::from_ref(&token);
+            //println!("token33,{:?},,,,{:?}",input,token);
+            let p = PrecedencedOperation::from_ref(&token);
+            //println!("token44,{:?}",p);
 
-        match p {
-            (Precedence::PCall, _) if precedence < Precedence::PCall => {
-                let (input, left) = parse_call_expression(input, left)?;
+            match p {
+                (Precedence::PCall, _) if precedence < Precedence::PCall => {
+                    //print!("7777");
+                    let (input, left) = parse_call_expression(input, left)?;
 
-                go_parse_pratt_expr(input, precedence, left)
+                    go_parse_pratt_expr(input, precedence, left)
+                }
+                (Precedence::PIndex, _) if precedence < Precedence::PIndex => {
+                    //print!("8888");
+                    let (input, left) = parse_index_expression(input, left)?;
+
+                    go_parse_pratt_expr(input, precedence, left)
+                }
+                (ref peek_precedence, _) if precedence < *peek_precedence => {
+                    //print!("999");
+                    ///println!("999,input{:?},left{:?}",input,left);
+
+                    let (input, left) = parse_binary_operation_expression(input, left)?;
+
+
+                    go_parse_pratt_expr(input, precedence, left)
+                }
+                _ => {
+                    ///print!("66666");
+                    Ok((input, left))
+                },
             }
-            (Precedence::PIndex, _) if precedence < Precedence::PIndex => {
-                let (input, left) = parse_index_expression(input, left)?;
-
-                go_parse_pratt_expr(input, precedence, left)
-            }
-            (ref peek_precedence, _) if precedence < *peek_precedence => {
-                let (input, left) = parse_binary_operation_expression(input, left)?;
-
-                go_parse_pratt_expr(input, precedence, left)
-            }
-            _ => Ok((input, left)),
         }
+        Err(_) => {
+            //println!("55555");
+            Ok((input.clone(), left))
+        }
+    }
+    // let token2 = lex_token(input.clone());
+    //
+    // println!("token11,{:?}",token2);
+    // let (second_input, token) = lex_token(input.clone())?;
+    // //let (second_input, token) = take(1usize)(input)?;
+    //
+    // // if token.is_empty() {
+    // //     Ok((second_input, left))
+    // // } else {
+    //
 
 }
 

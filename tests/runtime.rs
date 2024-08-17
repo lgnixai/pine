@@ -13,7 +13,7 @@ use tsr_runtime::api::events::Events;
 
 #[test]
 fn main() -> io::Result<()> {
-    let path = "ts/function.ts";
+    let path = "ts/enum.ts";
     let code = fs::read_to_string(path)?;
     let  code = new_input(&code);
 
@@ -62,11 +62,10 @@ fn main() -> io::Result<()> {
     runtime.add_module(&Events);
 
 
-    let ast= Parser::parse_ast(code.clone());
-
-    println!("{:?}",ast);
+    let (_, ast) = Parser::parse_ast(code.clone()).unwrap();
     //
-    // println!("{}", runtime.eval_program(ast).format(path, &code));
+    println!("{:#?}", ast);
+    //  println!("{}", runtime.eval_program(ast).format(path, &code));
     //println!("{:#?}", runtime.get_context());
 
     Ok(())

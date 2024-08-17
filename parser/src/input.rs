@@ -13,6 +13,7 @@ use crate::inputctx::ParserContext;
 use crate::lexer::ast::Literal;
 use std::{cmp::Ordering, fmt::Display};
 use std::fmt::Debug;
+use crate::error::NomError;
 
 
 #[derive(Clone, Copy, PartialEq, Debug, Eq, Hash, Default)]
@@ -154,7 +155,7 @@ pub type PineResult<'a, T> = IResult<Input<'a>, T,NomError<'a>>;
 //         Err(err) => Err(err),
 //     }
 // }
-pub type NomError<'a> = VerboseError<Input<'a>>;
+//pub type NomError<'a> = VerboseError<Input<'a>>;
 
 #[derive(Debug)]
 pub enum ParserError<'a> {

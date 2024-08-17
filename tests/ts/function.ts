@@ -1,3 +1,2 @@
-let a=1;
-
-print(a);
+var int a= 3 + 4
+console.log(a)
